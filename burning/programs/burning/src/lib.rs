@@ -132,6 +132,8 @@ pub mod burning {
 
         }
 
+        let joker = "Joker";
+        let mut j_count = 0;
         for i in 0..nft_count {
             let metadata = Metadata::from_account_info(&remaining_accounts[i*3])?;
             // Check if this NFT is the wanted collection and verified
@@ -152,11 +154,18 @@ pub mod burning {
                 if metadata.data.name.find(v_style[j as usize]) != None && metadata.data.name.find(v_artist[j as usize]) != None {
                     v_amount[j as usize] += 1;
                 }
+                if metadata.data.name.find(joker) != None {
+                    j_count += 1;
+                }
             }
         }
 
         for i in 0..option {
-            require!(v_amount[i as usize] >= list_data.amount[i as usize], BurningError::InvalidSetAmount);
+            if list_data.style[i as usize] == 4  && list_data.amount[i as usize] > v_amount[i as usize] {
+                require!(v_amount[i as usize] >= list_data.amount[i as usize] + j_count, BurningError::InvalidSetAmount);
+            } else {
+                require!(v_amount[i as usize] >= list_data.amount[i as usize], BurningError::InvalidSetAmount);
+            }
         }
 
         let token_program = &mut &ctx.accounts.token_program;
